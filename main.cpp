@@ -4,17 +4,18 @@
 #include <random>
 using namespace sf;
 using namespace std;
-int random_num();
+int random_num(int upper, int lower);
 RectangleShape initialize_grid(int area);
 void draw_grid(int width, int area, RenderWindow &w ,RectangleShape &rect);
-Sprite create_player(string filename, int gridlen, float scale=0.34);
+Sprite create_player(string filename, int gridlen, int area);
 void PlayerInput_1(Sprite& player, Event &e ,int size);
 
 
 int main()
 {
-    int random = (random_num());
     // set up the grid parameters
+    int random = ((random_num(99, 10) * 5)/675)%25;
+    if (random < 10){random+=15;}
     int gridWidth = random;
     int gridHeight = random;
     int rectSize = 65 ;
@@ -23,9 +24,9 @@ int main()
 
     RenderWindow window(VideoMode((gridHeight*rectSize), gridWidth*rectSize), "SFML Grid");
 
-    Sprite ch_1 = create_player("Goujo.png", gridWidth);
-    Sprite ch_2 = create_player("itadori.png",gridWidth);
-    Sprite ch_3 = create_player("meg.png",gridWidth);
+    Sprite ch_1 = create_player("Goujo.png", gridWidth, rectSize);
+    Sprite ch_2 = create_player("itadori.png",gridWidth, rectSize);
+    Sprite ch_3 = create_player("meg.png",gridWidth, rectSize);
     Sprite item = create_player("finger.png",gridWidth,0.1);
 
     while (window.isOpen()) {
@@ -81,22 +82,22 @@ void draw_grid(int width, int area, RenderWindow &w , RectangleShape &rect){
 }
 
 void PlayerInput_1(Sprite& player, Event &e , int size){
-    if (e.key.code == Keyboard::Left && player.getPosition().x > 65) {
+    if (e.key.code == Keyboard::Left && player.getPosition().x > size) {
         // Move player left
-        player.move(-65.f, 0.f);
-    } else if (e.key.code == Keyboard::Right && player.getPosition().x < 900 ) {
+        player.move(-1*size, 0.f);
+    } else if (e.key.code == Keyboard::Right && player.getPosition().x < size * 14 ) {
         // Move player right
-        player.move(65.f, 0.f);
-    } else if (e.key.code == Keyboard::Up  && player.getPosition().y > 65) {
+        player.move(size, 0.f);
+    } else if (e.key.code == Keyboard::Up  && player.getPosition().y > size) {
         // Move player left
-        player.move(0.f, -65.f);
-    } else if (e.key.code == Keyboard::Numpad2  && player.getPosition().y <900) {
+        player.move(0.f, -1*size);
+    } else if (e.key.code == Keyboard::Numpad2  && player.getPosition().y <size * 14) {
         // Move player right
-        player.move(0.f, +65.f);
+        player.move(0.f, size);
     }
 }
 
-Sprite create_player(string filename, int gridlen, float scale){
+Sprite create_player(string filename, int gridlen, int area){
 
     // generate a random number between 1-14
     int random_width = random_num(14,1);
@@ -113,8 +114,8 @@ Sprite create_player(string filename, int gridlen, float scale){
     Sprite playerSprite;
     playerSprite.setTexture(*playerTexture);
     playerSprite.setPosition(20.f, 1.f);
-    playerSprite.move(random_width * 65, random_height * 65);
-    playerSprite.scale(scale, scale);
+    playerSprite.move(random_width * area, random_height * area);
+    playerSprite.scale(0.34f, 0.34f);
     return playerSprite;
 
 }
