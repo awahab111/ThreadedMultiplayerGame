@@ -1,6 +1,8 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <random>
+#include <queue>
+#include <functional>
 using namespace std;
 using namespace sf;
 
@@ -8,6 +10,7 @@ int random_num(int upper, int lower);
 RectangleShape initialize_grid(int area);
 void draw_grid(int width, int area, RenderWindow &w ,RectangleShape &rect);
 
+std::queue<function<void()>> functionQueue[3];
 
 class Player {
 private:
@@ -23,6 +26,7 @@ public:
     void PlayerInput_1(Event &e , int size);
     void PlayerInput_2(Event &e , int size);
     void PlayerInput_3(Event &e , int size);
+    void move(float a, float b);
     void increment_points();
     int getpoints();
     void update_position();
@@ -58,65 +62,80 @@ Player::Player(std::string filename, int gridlen, int area) {
 void Player::PlayerInput_1(Event &e , int size) {
     if (e.key.code == Keyboard::Numpad4 && playerSprite.getPosition().x > size) {
         // Move playerSprite left
-        playerSprite.move(-1*size, 0.f);
+        functionQueue[0].push(bind(&Player::move,ref(*this),(-1*size), 0.f));
+        
+        cout << "left" << endl;
     } 
     else if (e.key.code == Keyboard::Numpad6 && playerSprite.getPosition().x < size * 14 ) {
         // Move playerSprite right
-        playerSprite.move(size, 0.f);
+        functionQueue[0].push(bind(&Player::move,ref(*this),(size), 0.f));
+        cout << "right" << endl;
     } 
     else if (e.key.code == Keyboard::Numpad8  && playerSprite.getPosition().y > size) {
         // Move playerSprite up
-        playerSprite.move(0.f, -1*size);
+        functionQueue[0].push(bind(&Player::move,ref(*this),0,(-1*size)));
+        cout << "up" << endl;
     } 
     else if (e.key.code == Keyboard::Numpad2  && playerSprite.getPosition().y <size * 14) {
         // Move playerSprite down
-        playerSprite.move(0.f, size);
+        functionQueue[0].push(bind(&Player::move,ref(*this),0,(size)));
+        cout << "down" << endl;
     }
-    update_position();
+    cout << playerSprite.getPosition().x  << " " << playerSprite.getPosition().y << endl;
 }
 
 void Player::PlayerInput_2(Event &e , int size) {
-    if (e.key.code == Keyboard::A && playerSprite.getPosition().x > size) {
+   if (e.key.code == Keyboard::A && playerSprite.getPosition().x > size) {
         // Move playerSprite left
-        playerSprite.move(-1*size, 0.f);
+        functionQueue[1].push(bind(&Player::move,ref(*this),(-1*size), 0.f));
+        cout << "left" << endl;
     } 
     else if (e.key.code == Keyboard::D && playerSprite.getPosition().x < size * 14 ) {
         // Move playerSprite right
-        playerSprite.move(size, 0.f);
+        functionQueue[1].push(bind(&Player::move,ref(*this),(size), 0.f));
+        cout << "right" << endl;
     } 
     else if (e.key.code == Keyboard::W  && playerSprite.getPosition().y > size) {
         // Move playerSprite up
-        playerSprite.move(0.f, -1*size);
+        functionQueue[1].push(bind(&Player::move,ref(*this),0,(-1*size)));
+        cout << "up" << endl;
     } 
     else if (e.key.code == Keyboard::S  && playerSprite.getPosition().y <size * 14) {
         // Move playerSprite down
-        playerSprite.move(0.f, size);
+        functionQueue[1].push(bind(&Player::move,ref(*this),0,(size)));
+        cout << "down" << endl;
     }
-    update_position();
 }
 
 void Player::PlayerInput_3(Event &e , int size) {
-    if (e.key.code == Keyboard::H && playerSprite.getPosition().x > size) {
+   if (e.key.code == Keyboard::H && playerSprite.getPosition().x > size) {
         // Move playerSprite left
-        playerSprite.move(-1*size, 0.f);
+        functionQueue[2].push(bind(&Player::move,ref(*this),(-1*size), 0.f));
+        cout << "left" << endl;
     } 
     else if (e.key.code == Keyboard::K && playerSprite.getPosition().x < size * 14 ) {
         // Move playerSprite right
-        playerSprite.move(size, 0.f);
+        functionQueue[2].push(bind(&Player::move,ref(*this),(size), 0.f));
+        cout << "right" << endl;
     } 
     else if (e.key.code == Keyboard::U  && playerSprite.getPosition().y > size) {
         // Move playerSprite up
-        playerSprite.move(0.f, -1*size);
+        functionQueue[2].push(bind(&Player::move,ref(*this),0,(-1*size)));
+        cout << "up" << endl;
     } 
     else if (e.key.code == Keyboard::J  && playerSprite.getPosition().y <size * 14) {
         // Move playerSprite down
-        playerSprite.move(0.f, size);
+        functionQueue[2].push(bind(&Player::move,ref(*this),0,(size)));
+        cout << "down" << endl;
     }
-    update_position();
 }
 
 void Player::increment_points(){
     points++;
+}
+
+void Player::move(float a, float b){
+    playerSprite.move(a, b);
 }
 
 int Player::getpoints(){
@@ -127,6 +146,24 @@ void Player::update_position() {
     positionX = playerSprite.getPosition().x;
     positionX = playerSprite.getPosition().y;
 }
+
+
+void* PlayerInput_1_wrapper(void* args) {
+  auto [me, e, area] = *static_cast<tuple<Player*, Event*, int>*>(args);
+  me->PlayerInput_1(*e, area);
+  return NULL;
+}
+void* PlayerInput_2_wrapper(void* args) {
+  auto [me, e, area] = *static_cast<tuple<Player*, Event*, int>*>(args);
+  me->PlayerInput_2(*e, area);
+  return NULL;
+}
+void* PlayerInput_3_wrapper(void* args) {
+  auto [me, e, area] = *static_cast<tuple<Player*, Event*, int>*>(args);
+  me->PlayerInput_3(*e, area);
+  return NULL;
+}
+
 
 class Item {
 private:
@@ -207,4 +244,16 @@ void draw_grid(int width, int area, RenderWindow &w , RectangleShape &rect){
 }
 
 
+
+bool check_collision(Player characters, Item **finger){
+    bool gamefinish = true;
+    for (int i = 0; i < 20; i++){
+        if (finger[i]->isColliding(characters.playerSprite) && finger[i]->getActive()){
+            finger[i]->setPosition(999,999);
+            finger[i]->setActive(false);
+            characters.increment_points();
+        }
+        if (finger[i]->getActive() == true){gamefinish = false;}
+    }
+}
 

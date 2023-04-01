@@ -1,10 +1,12 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <pthread.h>
+#include <sys/wait.h>
 #include "Player.h"
 using namespace sf;
 using namespace std;
 
+void* PlayerInput_1_wrapper(void* args);
 
 int main()
 {
@@ -28,8 +30,10 @@ int main()
         finger[i] = new Item("resources/finger.png", gridWidth, rectSize);
     }
     
-    // pthread_t t1;
-    // pthread_create(&t1, NULL, characters[j].PlayerInput_1)
+    pthread_t t1,t2,t3;
+    pthread_attr_t detach_attr;
+    pthread_attr_init(&detach_attr);
+    pthread_attr_setdetachstate(&detach_attr, PTHREAD_CREATE_DETACHED);
     //Main loop
     while (window.isOpen()) {
         Event event;
@@ -38,36 +42,43 @@ int main()
 
             // Player Input
             if (event.type == Event::KeyPressed) {
-                characters[0].PlayerInput_1(event, rectSize);
-                characters[1].PlayerInput_2(event, rectSize);
-                characters[2].PlayerInput_3(event, rectSize);
+                
+
+                auto args2 = make_tuple(&characters[2], &event, rectSize);
+                pthread_create(&t3, &detach_attr, PlayerInput_3_wrapper, static_cast<void*> (&args2));
+                auto args1 = make_tuple(&characters[1], &event, rectSize);
+                pthread_create(&t2, &detach_attr, PlayerInput_2_wrapper, static_cast<void*> (&args1));
+                auto args = make_tuple(&characters[0], &event, rectSize);
+                pthread_create(&t1, &detach_attr, PlayerInput_1_wrapper, static_cast<void*> (&args));
+                
+            } 
+        }
+ 
+        for (int i = 0; i < 3; i++)
+        {
+            while (!functionQueue[i].empty()) {
+            functionQueue[i].front()();
+            functionQueue[i].pop();
             }
         }
-
+        
         //Gathering items
         bool gamefinish = true;
         for (int j = 0; j < 3; j++)
         {
-            for (int i = 0; i < 20; i++){
-                if (finger[i]->isColliding(characters[j].playerSprite) && finger[i]->getActive()){
-                    finger[i]->setPosition(999,999);
-                    finger[i]->setActive(false);
-                    characters[j].increment_points();
-                }
-                if (finger[i]->getActive() == true){gamefinish = false;}
-            }
+           check_collision(characters[0], finger);
         }
 
         
         
 
-        if (gamefinish){ 
-            cout << "Game Finished" << endl;
-            for (int i = 0; i < 3; i++){
-                cout << "Points of " << i << " " << characters[i].getpoints() << endl ;   
-            }
-            return 0;
-        }
+        // if (gamefinish){ 
+        //     cout << "Game Finished" << endl;
+        //     for (int i = 0; i < 3; i++){
+        //         cout << "Points of " << i << " " << characters[i].getpoints() << endl ;   
+        //     }
+        //     return 0;
+        // }
 
         //Updating window       
 
