@@ -23,7 +23,8 @@ public:
     void PlayerInput_1(Event &e , int size);
     void PlayerInput_2(Event &e , int size);
     void PlayerInput_3(Event &e , int size);
-
+    void increment_points();
+    int getpoints();
     void update_position();
 
 };
@@ -50,6 +51,8 @@ Player::Player(std::string filename, int gridlen, int area) {
 
     //Creating a bounding box
     boundingbox = playerSprite.getGlobalBounds();
+
+    points = 0;
 }
 
 void Player::PlayerInput_1(Event &e , int size) {
@@ -110,6 +113,14 @@ void Player::PlayerInput_3(Event &e , int size) {
         playerSprite.move(0.f, size);
     }
     update_position();
+}
+
+void Player::increment_points(){
+    points++;
+}
+
+int Player::getpoints(){
+    return points;
 }
 
 void Player::update_position() {

@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <pthread.h>
 #include "Player.h"
 using namespace sf;
 using namespace std;
@@ -27,7 +28,8 @@ int main()
         finger[i] = new Item("resources/finger.png", gridWidth, rectSize);
     }
     
-
+    // pthread_t t1;
+    // pthread_create(&t1, NULL, characters[j].PlayerInput_1)
     //Main loop
     while (window.isOpen()) {
         Event event;
@@ -47,14 +49,24 @@ int main()
         for (int j = 0; j < 3; j++)
         {
             for (int i = 0; i < 20; i++){
-                if (finger[i]->isColliding(characters[j].playerSprite)){
+                if (finger[i]->isColliding(characters[j].playerSprite) && finger[i]->getActive()){
                     finger[i]->setPosition(999,999);
                     finger[i]->setActive(false);
+                    characters[j].increment_points();
                 }
                 if (finger[i]->getActive() == true){gamefinish = false;}
             }
-            if (gamefinish){ cout << "Game Finished" << endl; return 0;}
-            
+        }
+
+        
+        
+
+        if (gamefinish){ 
+            cout << "Game Finished" << endl;
+            for (int i = 0; i < 3; i++){
+                cout << "Points of " << i << " " << characters[i].getpoints() << endl ;   
+            }
+            return 0;
         }
 
         //Updating window       
