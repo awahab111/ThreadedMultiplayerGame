@@ -3,10 +3,10 @@
 #include <pthread.h>
 #include <sys/wait.h>
 #include "Player.h"
-using namespace sf;
+using namespace sf; 
 using namespace std;
-
-void* PlayerInput_1_wrapper(void* args);
+ 
+void* PlayerInput_1_wrapper(void* args); 
 
 int main()
 {
@@ -30,7 +30,8 @@ int main()
         finger[i] = new Item("resources/finger.png", gridWidth, rectSize);
     }
     
-    pthread_t t1,t2,t3;
+    // Initializing Threads
+    pthread_t t1,t2,t3; 
     pthread_attr_t detach_attr;
     pthread_attr_init(&detach_attr);
     pthread_attr_setdetachstate(&detach_attr, PTHREAD_CREATE_DETACHED);
@@ -42,44 +43,36 @@ int main()
 
             // Player Input
             if (event.type == Event::KeyPressed) {
-                
-
+                 
+ 
                 auto args2 = make_tuple(&characters[2], &event, rectSize);
                 pthread_create(&t3, &detach_attr, PlayerInput_3_wrapper, static_cast<void*> (&args2));
+
                 auto args1 = make_tuple(&characters[1], &event, rectSize);
                 pthread_create(&t2, &detach_attr, PlayerInput_2_wrapper, static_cast<void*> (&args1));
-                auto args = make_tuple(&characters[0], &event, rectSize);
-                pthread_create(&t1, &detach_attr, PlayerInput_1_wrapper, static_cast<void*> (&args));
                 
+                auto args = make_tuple(&characters[0], &event, rectSize);
+                pthread_create(&t1, &detach_attr, PlayerInput_1_wrapper, (void*) (&args));
+                pthread_t t4;
+                auto args3 = make_tuple(&characters[0] , finger, 0);
+                pthread_create(&t4, &detach_attr, check_collision_wrapper, (void*) (&args3));
             } 
         }
- 
+
+
+
+        // Emptying the functions queue
         for (int i = 0; i < 3; i++)
         {
             while (!functionQueue[i].empty()) {
             functionQueue[i].front()();
+            cout << "Main : "<< characters[i].getpoints() << endl;
             functionQueue[i].pop();
             }
+            
         }
+    
         
-        //Gathering items
-        bool gamefinish = true;
-        for (int j = 0; j < 3; j++)
-        {
-           check_collision(characters[0], finger);
-        }
-
-        
-        
-
-        // if (gamefinish){ 
-        //     cout << "Game Finished" << endl;
-        //     for (int i = 0; i < 3; i++){
-        //         cout << "Points of " << i << " " << characters[i].getpoints() << endl ;   
-        //     }
-        //     return 0;
-        // }
-
         //Updating window       
 
         window.clear(Color::Black);
