@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-c -std=c++17
-LDFLAGS=-lsfml-graphics -lsfml-window -lsfml-system -lGL
+LDFLAGS=-pthread -lsfml-graphics -lsfml-window -lsfml-system -lGL
 SOURCES=main.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=myprogram
