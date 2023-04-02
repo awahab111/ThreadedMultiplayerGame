@@ -35,6 +35,8 @@ int main()
     pthread_attr_t detach_attr;
     pthread_attr_init(&detach_attr);
     pthread_attr_setdetachstate(&detach_attr, PTHREAD_CREATE_DETACHED);
+    int sched_policy = SCHED_FIFO;
+    pthread_attr_setschedpolicy(&detach_attr, sched_policy);
     //Main loop
     while (window.isOpen()) {
         Event event;
@@ -46,33 +48,54 @@ int main()
                  
  
                 auto args2 = make_tuple(&characters[2], &event, rectSize);
-                pthread_create(&t3, &detach_attr, PlayerInput_3_wrapper, static_cast<void*> (&args2));
+                pthread_create(&t3, &detach_attr, PlayerInput_3_wrapper, (void*) (&args2));
 
                 auto args1 = make_tuple(&characters[1], &event, rectSize);
-                pthread_create(&t2, &detach_attr, PlayerInput_2_wrapper, static_cast<void*> (&args1));
+                pthread_create(&t2, &detach_attr, PlayerInput_2_wrapper, (void*) (&args1));
                 
                 auto args = make_tuple(&characters[0], &event, rectSize);
                 pthread_create(&t1, &detach_attr, PlayerInput_1_wrapper, (void*) (&args));
-                pthread_t t4;
-                auto args3 = make_tuple(&characters[0] , finger, 0);
-                pthread_create(&t4, &detach_attr, check_collision_wrapper, (void*) (&args3));
             } 
         }
 
 
+        //Item collection Threads for each player 
+        pthread_t item_threads[3];
+    
+        auto args3 = make_tuple(&characters[0] , finger, 0);
+        pthread_create(&item_threads[0],&detach_attr , check_collision_wrapper, (void*) (&args3));
+        auto args4 = make_tuple(&characters[1] , finger, 1);
+        pthread_create(&item_threads[1],&detach_attr , check_collision_wrapper, (void*) (&args4));
+        auto args5 = make_tuple(&characters[2] , finger, 2);
+        pthread_create(&item_threads[2],&detach_attr , check_collision_wrapper, (void*) (&args5));
 
         // Emptying the functions queue
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 3 ; i++)
         {
             while (!functionQueue[i].empty()) {
             functionQueue[i].front()();
-            cout << "Main : "<< characters[i].getpoints() << endl;
             functionQueue[i].pop();
             }
             
         }
     
+        bool gamefinish = true;
+        for (int i = 0; i < 20; i++)
+        {
+            if (finger[i]->getActive() == true){gamefinish = false;}
+        }
         
+
+        if (gamefinish)
+        {
+            cout << "POINTS : "<< endl ;
+            cout << "Player 1 : " << characters[0].getpoints() << endl;
+            cout << "Player 2 : " << characters[1].getpoints() << endl;
+            cout << "Player 3 : " << characters[2].getpoints() << endl;
+            return 0;
+        }
+        
+         
         //Updating window       
 
         window.clear(Color::Black);

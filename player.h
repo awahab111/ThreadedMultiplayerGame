@@ -252,12 +252,11 @@ void item_collect(Item *finger, Player *characters){
 }
 
 void check_collision(Player *characters, Item **finger, int player_no){
-    bool gamefinish = true;
     for (int i = 0; i < 20; i++){
         if (finger[i]->isColliding(characters->playerSprite) && finger[i]->getActive()){
             functionQueue[player_no].push(bind(&item_collect, finger[i], characters)); 
         }
-        if (finger[i]->getActive() == true){gamefinish = false;}
+        
     }
 
 }
@@ -266,6 +265,5 @@ void check_collision(Player *characters, Item **finger, int player_no){
 void * check_collision_wrapper(void * args){
     auto [me, fingers, player_no] = *static_cast<tuple<Player*,Item**, int>*>(args);
     check_collision(me, fingers, player_no);
-    cout << "Thread : "<< me->getpoints() << endl;
     pthread_exit(NULL);
 }
